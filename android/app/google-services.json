@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "314273359365",
+    "project_id": "hotel-parking-system",
+    "storage_bucket": "hotel-parking-system.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:314273359365:android:5b92cabc3f9cd37296de6c",
+        "android_client_info": {
+          "package_name": "com.example.epark"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdG6pvphC7Qqt6t-AbUoJ_NFbopmvhpyE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

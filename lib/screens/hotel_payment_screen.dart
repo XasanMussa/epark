@@ -49,26 +49,48 @@ class _HotelPaymentScreenState extends State<HotelPaymentScreen> {
       setState(() => _isLoading = true);
 
       try {
-        await _paymentService.storeHotelPayment(
-          packageName: widget.packageName,
-          checkInDate: widget.checkInDate,
-          checkOutDate: widget.checkOutDate,
-          numberOfGuests: widget.numberOfGuests,
-          extraParkingSpaces: widget.extraParkingSpaces,
-          totalPrice: widget.totalPrice,
-          guestName: _guestNameController.text.trim(),
-          email: _emailController.text.trim(),
-          phoneNumber: _phoneNumberController.text.trim(),
-          rfidNumber: _rfidController.text.trim(),
-          paymentMethod: _selectedPaymentMethod,
-        );
+        // Remove spaces and convert to uppercase for database storage
+        final formattedRFID =
+            _rfidController.text.replaceAll(' ', '').toUpperCase();
+        print("processing the payment");
+        final message = await _paymentService.makePayment(
+            _phoneNumberController.text.trim(),
+            widget.totalPrice.toDouble(),
+            "purchasing hotel service");
+        print("message: $message");
 
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => const HotelConfirmationScreen()),
-        );
+        if (message == "RCS_USER_REJECTED") {
+          print("user rejected to pay");
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Payment was rejected by user")),
+          );
+          return;
+        }
+
+        if (message == "RCS_SUCCESS") {
+          await _paymentService.storeHotelPayment(
+            packageName: widget.packageName,
+            checkInDate: widget.checkInDate,
+            checkOutDate: widget.checkOutDate,
+            numberOfGuests: widget.numberOfGuests,
+            extraParkingSpaces: widget.extraParkingSpaces,
+            totalPrice: widget.totalPrice,
+            guestName: _guestNameController.text.trim(),
+            email: _emailController.text.trim(),
+            phoneNumber: _phoneNumberController.text.trim(),
+            rfidNumber: formattedRFID,
+            paymentMethod: _selectedPaymentMethod,
+          );
+
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HotelConfirmationScreen(),
+            ),
+          );
+        }
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

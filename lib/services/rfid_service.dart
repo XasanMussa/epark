@@ -5,7 +5,9 @@ class RFIDService {
 
   Future<Map<String, dynamic>?> getBookingDetails(String rfidNumber) async {
     try {
-      print('Searching for RFID: $rfidNumber');
+      // Format the RFID number (remove spaces and convert to uppercase)
+      final formattedRFID = rfidNumber.replaceAll(' ', '').toUpperCase();
+      print('Searching for RFID: $formattedRFID');
 
       // Get all users
       final usersSnapshot = await _firestore.collection('users').get();
@@ -15,20 +17,25 @@ class RFIDService {
         // Get all booking documents in the user's bookings subcollection
         final bookingsSnapshot =
             await userDoc.reference.collection('bookings').get();
-        print('the bookingsSnapshotData has : $bookingsSnapshot');
+        print('Found ${bookingsSnapshot.docs.length} bookings for user');
 
         // Check each booking document for matching RFID
         for (var bookingDoc in bookingsSnapshot.docs) {
           final bookingData = bookingDoc.data();
-          print('the bookingData is: $bookingData');
-          if (bookingData['rfidNumber'] == rfidNumber) {
-            print('Found booking for RFID: $rfidNumber');
+          final bookingRFID = bookingData['rfidNumber']
+              ?.toString()
+              .replaceAll(' ', '')
+              .toUpperCase();
+          print('Comparing RFID: $bookingRFID with $formattedRFID');
+
+          if (bookingRFID == formattedRFID) {
+            print('Found booking for RFID: $formattedRFID');
             return bookingData;
           }
         }
       }
 
-      print('No booking found for RFID: $rfidNumber');
+      print('No booking found for RFID: $formattedRFID');
       return null;
     } catch (e) {
       print('Error in getBookingDetails: $e');

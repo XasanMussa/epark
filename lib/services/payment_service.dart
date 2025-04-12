@@ -11,7 +11,8 @@ class PaymentService {
   final String merchantUid = "M0910291";
   final String apiUserId = "1000416";
   final String apiKey = "API-675418888AHX";
-  Future<void> makePayment(number, amount, description) async {
+  Future<String> makePayment(
+      String number, double amount, String description) async {
     final url = Uri.parse('https://api.waafipay.net/asm');
 
     final requestPayLoad = {
@@ -26,22 +27,18 @@ class PaymentService {
         "apiKey": apiKey,
         "paymentMethod": "MWALLET_ACCOUNT",
         "payerInfo": {
-          "accountNo": number.text.trim(),
+          "accountNo": number,
         },
         "transactionInfo": {
-          "referenceId": DateTime.now()
-              .millisecondsSinceEpoch
-              .toString(), // Unique reference ID
-          "invoiceId": "154", // Replace with your invoice ID
-          "amount": double.tryParse(amount.text.trim()) ??
-              0.0, // Ensure amount is a valid number
+          "referenceId": DateTime.now().millisecondsSinceEpoch.toString(),
+          "invoiceId": "154",
+          "amount": amount,
           "currency": "USD",
-          "description": description.text.trim(),
+          "description": description,
         }
       }
     };
 
-    // Debugging: print the request payload
     print("Request Payload: ${json.encode(requestPayLoad)}");
 
     try {
@@ -51,20 +48,19 @@ class PaymentService {
         body: json.encode(requestPayLoad),
       );
 
-      // Debugging: print the response status and body
       print("Response Status: ${response.statusCode}");
       print("Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         final responseMsg = responseData['responseMsg'];
-        final transactionId = responseData['params']['transactionId'];
         return responseMsg;
       } else {
-        throw Exception('Payment failed');
+        throw Exception('Payment failed with status: ${response.statusCode}');
       }
     } catch (error) {
-      print("Error: $error"); // Debugging: print the error
+      print("Error: $error");
+      throw Exception('Payment failed: $error');
     }
   }
 
@@ -83,10 +79,16 @@ class PaymentService {
     required String paymentMethod,
   }) async {
     try {
+      print("Starting to store hotel payment...");
       final userId = _auth.currentUser?.uid;
-      if (userId == null) throw Exception('User not authenticated');
+      if (userId == null) {
+        print("Error: User not authenticated");
+        throw Exception('User not authenticated');
+      }
+      print("User ID: $userId");
 
       // Create booking document
+      print("Creating booking document...");
       final bookingDoc = await _firestore
           .collection('users')
           .doc(userId)
@@ -107,30 +109,49 @@ class PaymentService {
         'status': 'active',
         'createdAt': FieldValue.serverTimestamp(),
       });
+      print("Booking document created with ID: ${bookingDoc.id}");
 
       // Schedule notifications for the booking
-      await _notificationService.scheduleBookingNotifications(
-          bookingDoc.id, checkOutDate);
+      print("Scheduling notifications for booking ID: ${bookingDoc.id}");
+      print("Check-out date for notifications: $checkOutDate");
+      try {
+        await _notificationService.scheduleBookingNotifications(
+            bookingDoc.id, checkOutDate);
+        print("Notifications scheduled successfully");
+      } catch (e) {
+        print("Error scheduling notifications: $e");
+        print("Error details: ${e.toString()}");
+        // Don't throw the error here, as we don't want to fail the payment process
+      }
     } catch (e) {
+      print("Error storing payment: $e");
+      print("Error details: ${e.toString()}");
       throw Exception('Error storing payment: $e');
     }
   }
 
   // Store parking payment
-  Future<void> storeParkingPayment(
-      {required String packageName,
-      required DateTime startDate,
-      required DateTime endDate,
-      required int totalPrice,
-      required String phoneNumber,
-      required String rfidNumber,
-      required String paymentMethod,
-      required String status}) async {
+  Future<void> storeParkingPayment({
+    required String packageName,
+    required DateTime startDate,
+    required DateTime endDate,
+    required double totalPrice,
+    required String phoneNumber,
+    required String rfidNumber,
+    required String paymentMethod,
+    required String status,
+  }) async {
     try {
+      print("Starting to store parking payment...");
       final userId = _auth.currentUser?.uid;
-      if (userId == null) throw Exception('User not authenticated');
+      if (userId == null) {
+        print("Error: User not authenticated");
+        throw Exception('User not authenticated');
+      }
+      print("User ID: $userId");
 
       // Create booking document
+      print("Creating booking document...");
       final bookingDoc = await _firestore
           .collection('users')
           .doc(userId)
@@ -147,11 +168,23 @@ class PaymentService {
         'status': status,
         'createdAt': FieldValue.serverTimestamp(),
       });
+      print("Booking document created with ID: ${bookingDoc.id}");
 
       // Schedule notifications for the booking
-      await _notificationService.scheduleBookingNotifications(
-          bookingDoc.id, endDate);
+      print("Scheduling notifications for booking ID: ${bookingDoc.id}");
+      print("End date for notifications: $endDate");
+      try {
+        await _notificationService.scheduleBookingNotifications(
+            bookingDoc.id, endDate);
+        print("Notifications scheduled successfully");
+      } catch (e) {
+        print("Error scheduling notifications: $e");
+        print("Error details: ${e.toString()}");
+        // Don't throw the error here, as we don't want to fail the payment process
+      }
     } catch (e) {
+      print("Error storing payment: $e");
+      print("Error details: ${e.toString()}");
       throw Exception('Error storing payment: $e');
     }
   }

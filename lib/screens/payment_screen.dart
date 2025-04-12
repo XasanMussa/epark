@@ -8,7 +8,7 @@ class PaymentScreen extends StatefulWidget {
   final String packageName;
   final DateTime startDate;
   final DateTime endDate;
-  final int totalPrice;
+  final double totalPrice;
 
   const PaymentScreen({
     super.key,
@@ -45,14 +45,25 @@ class _PaymentScreenState extends State<PaymentScreen> {
         // Remove spaces and convert to uppercase for database storage
         final formattedRFID =
             _rfidController.text.replaceAll(' ', '').toUpperCase();
-        final message = _paymentService.makePayment(_phoneNumberController,
-            widget.totalPrice, "purchasing parking service");
+        print("Processing payment with RFID: $formattedRFID");
+
+        final message = await _paymentService.makePayment(
+            _phoneNumberController.text.trim(),
+            widget.totalPrice,
+            "purchasing parking service");
+        print("Payment response message: $message");
 
         if (message == "RCS_USER_REJECTED") {
-          print("user rejected to pay");
+          print("User rejected payment");
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Payment was rejected by user")),
+          );
+          return;
         }
 
         if (message == "RCS_SUCCESS") {
+          print("Payment successful, storing booking details...");
           await _paymentService.storeParkingPayment(
               packageName: widget.packageName,
               startDate: widget.startDate,
@@ -62,6 +73,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               rfidNumber: formattedRFID,
               paymentMethod: _selectedPaymentMethod,
               status: "active");
+          print("Booking stored successfully");
 
           if (!mounted) return;
           Navigator.pushReplacement(
@@ -72,6 +84,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           );
         }
       } catch (e) {
+        print("Error in payment process: $e");
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),

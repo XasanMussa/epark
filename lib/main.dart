@@ -5,6 +5,7 @@ import 'config/firebase_config.dart';
 import 'services/firebase_initializer.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
+import 'screens/admin/admin_sign_in_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +67,9 @@ class _MyAppState extends State<MyApp> {
           : _isLoggedIn
               ? const WelcomeScreen()
               : const SignUpScreen(),
+      routes: {
+        '/admin-sign-in': (context) => const AdminSignInScreen(),
+      },
     );
   }
 }

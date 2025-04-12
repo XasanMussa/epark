@@ -13,12 +13,12 @@ class _ParkingPackagesScreenState extends State<ParkingPackagesScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   String? _selectedPackage;
-  int _totalPrice = 0;
+  double _totalPrice = 0;
 
-  final Map<String, int> _packagePrices = {
-    'Basic Parking': 10,
-    'Premium Parking': 25,
-    'VIP Parking': 50,
+  final Map<String, double> _packagePrices = {
+    'Basic Parking': 0.01,
+    'Premium Parking': 0.02,
+    'VIP Parking': 0.03,
   };
 
   @override
@@ -167,7 +167,7 @@ class _ParkingPackagesScreenState extends State<ParkingPackagesScreen> {
   Widget _buildPaymentSummary() {
     final days = _endDate!.difference(_startDate!).inDays + 1;
     final dailyPrice = _packagePrices[_selectedPackage]!;
-    _totalPrice = days * dailyPrice;
+    _totalPrice = (days * dailyPrice);
 
     return Card(
       elevation: 4,

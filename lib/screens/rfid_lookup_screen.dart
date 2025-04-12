@@ -28,9 +28,11 @@ class _RFIDLookupScreenState extends State<RFIDLookupScreen> {
 
     try {
       // Remove spaces and convert to uppercase for database lookup
-      final formattedRFID =
-          _rfidController.text.replaceAll(' ', '').toUpperCase();
-      final details = await _rfidService.getBookingDetails(formattedRFID);
+      // final formattedRFID =
+      //     _rfidController.text.replaceAll(' ', '').toUpperCase();
+      print("rfidNumber is equal to : $_rfidController.text");
+      final details =
+          await _rfidService.getBookingDetails(_rfidController.text);
 
       if (!mounted) return;
 

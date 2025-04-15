@@ -3,11 +3,13 @@ import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:epark/services/notification_service.dart';
+import 'package:epark/services/rfid_realtime_service.dart';
 
 class PaymentService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final _notificationService = NotificationService();
+  final _rfidRealtimeService = RFIDRealtimeService();
   final String merchantUid = "M0910291";
   final String apiUserId = "1000416";
   final String apiKey = "API-675418888AHX";
@@ -111,6 +113,14 @@ class PaymentService {
       });
       print("Booking document created with ID: ${bookingDoc.id}");
 
+      // Store RFID information in Realtime Database
+      print("Storing RFID information in Realtime Database...");
+      await _rfidRealtimeService.storeRFIDInfo(
+        rfidNumber: rfidNumber,
+        isActive: true,
+        endDate: checkOutDate,
+      );
+
       // Schedule notifications for the booking
       print("Scheduling notifications for booking ID: ${bookingDoc.id}");
       print("Check-out date for notifications: $checkOutDate");
@@ -169,6 +179,14 @@ class PaymentService {
         'createdAt': FieldValue.serverTimestamp(),
       });
       print("Booking document created with ID: ${bookingDoc.id}");
+
+      // Store RFID information in Realtime Database
+      print("Storing RFID information in Realtime Database...");
+      await _rfidRealtimeService.storeRFIDInfo(
+        rfidNumber: rfidNumber,
+        isActive: status == 'active',
+        endDate: endDate,
+      );
 
       // Schedule notifications for the booking
       print("Scheduling notifications for booking ID: ${bookingDoc.id}");

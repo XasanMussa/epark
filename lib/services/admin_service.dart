@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user.dart' as models;
+import 'rfid_realtime_service.dart';
 
 class AdminService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final _rfidRealtimeService = RFIDRealtimeService();
   static const String adminUid = "BSParFBp30NvfhZiFuH2ZjRT9JW2";
 
   // Admin login
@@ -166,7 +168,7 @@ class AdminService {
   // Toggle user activation status
   Future<void> toggleUserActivation(String userId, bool isActive) async {
     try {
-      // Update user status
+      // Update user status in Firestore
       await _firestore.collection('users').doc(userId).update({
         'isActive': isActive,
         'lastUpdated': FieldValue.serverTimestamp(),
@@ -181,10 +183,19 @@ class AdminService {
             .get();
 
         for (var booking in bookingsSnapshot.docs) {
+          final bookingData = booking.data();
+          final rfidNumber = bookingData['rfidNumber'] as String?;
+
+          // Update booking status in Firestore
           await booking.reference.update({
             'status': 'inactive',
             'lastUpdated': FieldValue.serverTimestamp(),
           });
+
+          // Update RFID status in Realtime Database if RFID exists
+          if (rfidNumber != null) {
+            await _rfidRealtimeService.updateRFIDStatus(rfidNumber, false);
+          }
         }
       }
     } catch (e) {
@@ -197,18 +208,54 @@ class AdminService {
   Future<void> toggleBookingActivation(
       String userId, String bookingId, bool isActive) async {
     try {
-      await _firestore
+      print('Starting to toggle booking activation...');
+      print('User ID: $userId');
+      print('Booking ID: $bookingId');
+      print('New status: $isActive');
+
+      // Get the booking document
+      final bookingDoc = await _firestore
           .collection('users')
           .doc(userId)
           .collection('bookings')
           .doc(bookingId)
-          .update({
+          .get();
+
+      if (!bookingDoc.exists) {
+        throw Exception('Booking not found');
+      }
+
+      final bookingData = bookingDoc.data() as Map<String, dynamic>;
+      final rfidNumber = bookingData['rfidNumber'] as String?;
+      final endDate = bookingData['endDate'] as Timestamp?;
+
+      print('RFID Number: $rfidNumber');
+      print('End Date: $endDate');
+
+      // Update booking status in Firestore
+      await bookingDoc.reference.update({
         'status': isActive ? 'active' : 'inactive',
         'lastUpdated': FieldValue.serverTimestamp(),
       });
+      print('Booking status updated in Firestore');
+
+      // Update RFID status in Realtime Database if RFID exists
+      if (rfidNumber != null) {
+        print('Updating RFID status in Realtime Database...');
+        await _rfidRealtimeService.storeRFIDInfo(
+          rfidNumber: rfidNumber,
+          isActive: isActive,
+          endDate:
+              endDate?.toDate() ?? DateTime.now().add(const Duration(days: 30)),
+        );
+        print('RFID status updated in Realtime Database');
+      } else {
+        print('No RFID number found for this booking');
+      }
     } catch (e) {
       print('Error toggling booking activation: $e');
-      throw Exception('Failed to update booking status');
+      print('Stack trace: ${StackTrace.current}');
+      throw Exception('Failed to update booking status: $e');
     }
   }
 

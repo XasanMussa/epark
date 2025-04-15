@@ -4,11 +4,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:epark/services/rfid_realtime_service.dart';
 
 class NotificationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
+  final _rfidRealtimeService = RFIDRealtimeService();
 
   Future<void> initialize() async {
     print('Initializing notification service...');
@@ -192,10 +194,18 @@ class NotificationService {
             await userDoc.reference.collection('bookings').doc(bookingId).get();
 
         if (bookingDoc.exists) {
+          final bookingData = bookingDoc.data() as Map<String, dynamic>;
+          final rfidNumber = bookingData['rfidNumber'] as String;
+
+          // Update booking status in Firestore
           await bookingDoc.reference.update({
             'status': 'inactive',
             'lastActiveDate': DateTime.now(),
           });
+
+          // Update RFID status in Realtime Database
+          await _rfidRealtimeService.updateRFIDStatus(rfidNumber, false);
+
           break;
         }
       }

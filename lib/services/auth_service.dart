@@ -48,10 +48,25 @@ class AuthService {
     required String password,
   }) async {
     try {
-      await _auth.signInWithEmailAndPassword(
+      // First sign in to get the user
+      final userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      // Check if user is active in Firestore
+      final userDoc = await _firestore
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+      if (!userDoc.exists || userDoc.data()?['isActive'] == false) {
+        // Sign out the user if they are not active
+        await _auth.signOut();
+        throw Exception(
+            'Your account has been deactivated. Please contact support.');
+      }
+
+      // User is active, proceed with login
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_isLoggedInKey, true);
     } catch (e) {

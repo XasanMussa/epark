@@ -194,19 +194,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/admin-sign-in');
-                },
-                child: const Text(
-                  'Admin Sign In',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.green,
-                  ),
-                ),
-              ),
             ],
           ),
         ),

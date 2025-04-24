@@ -1,5 +1,7 @@
 import 'package:epark/screens/auth/sign_up_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
 import 'screens/welcome_screen.dart';
 import 'config/firebase_config.dart';
 import 'services/firebase_initializer.dart';
@@ -45,6 +47,15 @@ class _MyAppState extends State<MyApp> {
     _checkAuthState();
   }
 
+  bool get _isWindows {
+    if (kIsWeb) return false;
+    try {
+      return Platform.isWindows;
+    } catch (e) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -64,12 +75,11 @@ class _MyAppState extends State<MyApp> {
                 child: CircularProgressIndicator(),
               ),
             )
-          : _isLoggedIn
-              ? const WelcomeScreen()
-              : const SignUpScreen(),
-      routes: {
-        '/admin-sign-in': (context) => const AdminSignInScreen(),
-      },
+          : _isWindows
+              ? const AdminSignInScreen() // Show admin login on Windows
+              : _isLoggedIn
+                  ? const WelcomeScreen()
+                  : const SignUpScreen(),
     );
   }
 }

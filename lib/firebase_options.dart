@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -49,12 +46,22 @@ class DefaultFirebaseOptions {
     }
   }
 
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDdG6pvphC7Qqt6t-AbUoJ_NFbopmvhpyE',
+    appId: '1:314273359365:android:5b92cabc3f9cd37296de6c',
+    messagingSenderId: '314273359365',
+    projectId: 'hotel-parking-system',
+    storageBucket: 'hotel-parking-system.appspot.com',
+    databaseURL: 'https://hotel-parking-system-default-rtdb.firebaseio.com',
+  );
+
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDdG6pvphC7Qqt6t-AbUoJ_NFbopmvhpyE',
     appId: '1:314273359365:android:5b92cabc3f9cd37296de6c',
     messagingSenderId: '314273359365',
     projectId: 'hotel-parking-system',
-    storageBucket: 'hotel-parking-system.firebasestorage.app',
+    storageBucket: 'hotel-parking-system.appspot.com',
+    databaseURL: 'https://hotel-parking-system-default-rtdb.firebaseio.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -62,7 +69,8 @@ class DefaultFirebaseOptions {
     appId: '1:314273359365:ios:e83da9fdaa9b35d696de6c',
     messagingSenderId: '314273359365',
     projectId: 'hotel-parking-system',
-    storageBucket: 'hotel-parking-system.firebasestorage.app',
+    storageBucket: 'hotel-parking-system.appspot.com',
     iosBundleId: 'com.example.epark',
+    databaseURL: 'https://hotel-parking-system-default-rtdb.firebaseio.com',
   );
 }

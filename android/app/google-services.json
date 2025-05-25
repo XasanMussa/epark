@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "314273359365",
+    "firebase_url": "https://hotel-parking-system-default-rtdb.firebaseio.com",
     "project_id": "hotel-parking-system",
     "storage_bucket": "hotel-parking-system.firebasestorage.app"
   },

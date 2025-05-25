@@ -47,10 +47,10 @@ class _MyAppState extends State<MyApp> {
     _checkAuthState();
   }
 
-  bool get _isWindows {
-    if (kIsWeb) return false;
+  bool get _isAdminPlatform {
+    if (kIsWeb) return true; // Show admin interface on web
     try {
-      return Platform.isWindows;
+      return Platform.isWindows; // Show admin interface on Windows
     } catch (e) {
       return false;
     }
@@ -75,8 +75,8 @@ class _MyAppState extends State<MyApp> {
                 child: CircularProgressIndicator(),
               ),
             )
-          : _isWindows
-              ? const AdminSignInScreen() // Show admin login on Windows
+          : _isAdminPlatform
+              ? const AdminSignInScreen() // Show admin login on Web and Windows
               : _isLoggedIn
                   ? const WelcomeScreen()
                   : const SignUpScreen(),
